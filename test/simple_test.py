@@ -15,6 +15,15 @@ def test_with_list():
     assert f() == [1]
     assert f() == [1]
 
+    @latebinding
+    def f(x: list[list[Any]] = __([[]])) -> list[list[Any]]:
+        x[0].append(1)
+        return x
+
+    assert f() == [[1]]
+    assert f() == [[1]]
+    assert f() == [[1]]
+
 
 def test_immutable():
     @latebinding
@@ -25,3 +34,19 @@ def test_immutable():
     assert type(param.default) is frozenset
     param = inspect.signature(f).parameters['y']
     assert type(param.default) is _LateBound
+
+
+def test_count():
+    t = 0
+
+    def a() -> int:
+        nonlocal t
+        t += 1
+        return t
+
+    @latebinding
+    def f(x: int = __(a())) -> int:
+        return 2 * x
+
+    assert f() == 2
+    assert f() == 4
